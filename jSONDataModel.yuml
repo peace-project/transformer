@@ -1,0 +1,45 @@
+[Test|name:String; description:String; executionTimestamp:long;engineDependentFiles: List String;engineIndependentFiles: List String]
+[Test]*->[Tool|id:String; version:String; type:Betsy&#47;Benchflow]
+[Test]*->[Engine|name:String; version:String; configuration:String]
+[Test]->[Capability]
+[Engine]-*>[ProcessLanguage]
+
+
+[BetsyConformanceTest|totalFailures:int; supported:FULL&#47;PARTIAL&#47;NONE; totalDuration:long; reportDuration:long; processDuration:long; featureId:String]
+[Capability]^-[BetsyConformanceTest]
+[BetsyConformanceTest]-*>[TestCase]
+
+[BetsyExpressivenessTest|supported:+&#47;+-&#47;-; totalDuration:long; reportDuration:long; processDuration:long]
+[Capability]^-[BetsyExpressivenessTest]
+[BetsyExpressivenessTest]->[Pattern]
+[BetsyExpressivenessTest]-*>[TestCase]
+
+[BenchflowTest|process_duration:double; cpu:Map String double; cpu_core: Map String double; ram: Map String double; throughput:Map String double;number_of_process_instances:double; byte_size:Map String double; io:Map String double]
+[Capability]^-[BenchflowTest]
+[BenchflowTest]->[Process]
+
+
+[Construct|name:String; desc:String; group:String]
+[Feature|name:String; deployable:bool; description:String]->[ProcessLanguage]
+[Construct]-*>[Feature]
+
+[ProcessLanguage|BPEL&#47;BPMN&#47;UNKNOWN]
+
+[Pattern|name:String; deployable:bool; description:String]
+[Pattern]->[ProcessLanguage]
+[Process|name:String; description:String]
+[Process]->[ProcessLanguage]
+
+
+[TestCase| number:int; description:String; duration:long;  successful:bool]
+[TestCase]-*>[TestStep]
+
+
+[TestStep|description:String; successful:bool; type: SoapTestStep&#47; BPMNTestStep&#47; DelayTestStep; attributes:Map String]
+[TestStep]-*>[TestAssertion]
+
+[TestAssertion|message:String; successful:bool; type:BPMNTestAssertion&#47; XpathTestAssertion&#47; SoapFaultTestAssertion&#47; ExitAssertion&#47; DeployableAssertion&#47; DeployableAssertion&#47; NotDeployableAssertion; attributes:Map String]
+
+
+[TestStep]-[note: attributes:; SoapTestStep:;input;operation;testPartner;concurrencyTest; BPMNTestStep:;input;delay;integerVariable:int;hasParallelProcess;PARALLEL_PROCESS_KEY; DelayTestStep:]
+[TestAssertion]-[note: attributes:;  BPMNTestAssertion;trace; XpathTestAssertion;xpathExpression;expectedOutput;output; SoapFaultTestAssertion;faultString; ExitAssertion; DeployableAssertion; NotDeployableAssertion]

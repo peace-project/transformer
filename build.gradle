@@ -1,0 +1,28 @@
+apply plugin: 'java'
+apply plugin: "idea"
+apply plugin: 'application'
+
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+version = '1.0'
+mainClassName = "convert.Main"
+
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Transformer tool for the peace-website',
+                'Implementation-Version': version,
+                'Main-Class': mainClassName
+
+    }
+}
+
+repositories {
+  flatDir { dirs "lib" }
+  mavenCentral()
+}
+
+dependencies {
+    compile 'org.json:json:20160212'
+}
