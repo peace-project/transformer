@@ -26,6 +26,7 @@ public class PathConverter {
         System.out.println("Converting: " + jsonFile);
         String parentFile = new File(jsonFile).getAbsoluteFile().getParentFile().toString();
         if (new File(parentFile + File.separator + "files").exists()) {
+            System.out.println(new File(parentFile + File.separator + "files"));
             System.out.println("Files directory already exists. Do not copy anything.");
             return;
         }
@@ -54,8 +55,8 @@ public class PathConverter {
         if (jsonFile.contains("tests-engine-dependent.json")) {
             outputArray = copyEngineDependentFiles(parentFile, fileContent);
         } else if (jsonFile.contains("tests-engine-independent.json")) {
-
             outputArray = getCopyEngineIndependentFiles(parentFile, fileContent);
+
         } else {
             System.out.println("The file is not a engine dependent or independent file.");
             write = false;
@@ -77,10 +78,10 @@ public class PathConverter {
             JSONObject obj = inputArray.getJSONObject(i);
             String featureId = obj.getString(Constants.FEATURE_ID_TOKEN);
 
-            JSONArray engineDependentArrayOutput = copyEngineIndependentFiles(parentFile, obj
+            JSONArray engineIndependentArrayOutput = copyEngineIndependentFiles(parentFile, obj
                     .getJSONArray(Constants.ENGINE_INDEPENDENT_FILES_TOKEN), featureId);
             obj.remove(Constants.ENGINE_INDEPENDENT_FILES_TOKEN);
-            obj.put(Constants.ENGINE_INDEPENDENT_FILES_TOKEN, engineDependentArrayOutput);
+            obj.put(Constants.ENGINE_INDEPENDENT_FILES_TOKEN, engineIndependentArrayOutput);
 
             outputArray.put(obj);
         }
@@ -125,12 +126,23 @@ public class PathConverter {
      */
     private JSONArray copyEngineIndependentFiles(String parentFile, JSONArray engineIndependentArrayInput,
                                                  String featureId) {
+
+
         JSONArray engineIndependentArrayOutput = new JSONArray();
         for (int j = 0; j < engineIndependentArrayInput.length(); j++) {
-            String p = engineIndependentArrayInput.getString(j);
-            String newPath = "files" + File.separator + "engineIndependent" + File.separator + Math.abs(featureId.hashCode()) + File.separator;
-            newPath += p.substring(p.lastIndexOf(File.separator) + 1);
-            if (copyFile(parentFile, p, newPath)) engineIndependentArrayOutput.put(newPath);
+            String oldPath = engineIndependentArrayInput.getString(j);
+            if ((parentFile.endsWith(File.separator + "test") || parentFile.endsWith("\\" + "test")) && oldPath.startsWith("test")) {
+                oldPath = oldPath.replace("test" + File.separator, "").replace("test" + "\\", "");
+            }
+            if (oldPath.endsWith(".bpmn")) {
+                engineIndependentArrayInput.put(createBPMNImage(parentFile, oldPath));
+            }
+            String newPath = "files" + File.separator + "engineIndependent" + File.separator + Math.abs(featureId.hashCode());
+            newPath += File.separator + oldPath.substring(convertToPath(oldPath).lastIndexOf(File.separator) + 1);
+
+            if (copyFile(parentFile, oldPath, newPath)) engineIndependentArrayOutput.put(newPath);
+
+
         }
         return engineIndependentArrayOutput;
     }
@@ -198,6 +210,7 @@ public class PathConverter {
         }
         return oldPath + ".png";
     }
+
 
     /**
      * Copies the file from the oldPath to the newPath in the specified parent directory
