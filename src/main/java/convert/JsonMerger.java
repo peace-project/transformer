@@ -1,6 +1,7 @@
 package convert;
 
 
+import org.fife.ui.rsyntaxtextarea.Style;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -212,7 +213,7 @@ public class JsonMerger {
         JSONArray outputArray = new JSONArray();
         for (int i = 0; i < newArray.length(); i++) {
 
-            outputArray.put(newArray.get(i));
+            outputArray.put(newArray.getJSONObject(i));
         }
         for (int i = 0; i < oldArray.length(); i++) {
             JSONObject oldCap = oldArray.getJSONObject(i);
@@ -220,18 +221,23 @@ public class JsonMerger {
             if (newCap == null) {
                 //capability not present
                 outputArray.put(oldCap);
+                System.out.println("added " + oldCap.getString("id"));
+                System.out.println();
+
             } else {
                 System.out.println("both present merging: " + oldCap.getString("id"));
+                System.out.println();
 
-                String nextToken = getNextToken(null);
+                String nextToken = getNextToken("language");
                 JSONArray oldNextLevel = oldCap.getJSONArray(nextToken);
                 JSONArray newNextLevel = newCap.getJSONArray(nextToken);
                 oldCap.remove(nextToken);
-
                 oldCap.put(nextToken, mergeLGCF(oldNextLevel, newNextLevel, nextToken));
+
             }
         }
         try {
+
             System.out.println("Writing " + outputArray.length() + " constructs.");
             Files.write(Paths.get(targetDir + File.separator + "merged-feature-tree.json"), outputArray.toString(1).getBytes());
             System.out.println("done writing.");
@@ -243,16 +249,44 @@ public class JsonMerger {
     private JSONArray mergeLGCF(JSONArray oldArray, JSONArray newArray, String currentLevel) {
         JSONArray output = new JSONArray();
         for (int i = 0; i < newArray.length(); i++) {
-            output.put(newArray.get(i));
+            output.put(newArray.getJSONObject(i));
+
         }
         for (int i = 0; i < oldArray.length(); i++) {
             JSONObject oldObj = oldArray.getJSONObject(i);
             JSONObject newObj = getObjectWithId(output, oldObj.getString("id"));
             if (newObj == null) {
                 output.put(oldObj);
+                System.out.println("added " + oldObj.getString("id"));
+                System.out.println();
+                if(getNextToken(currentLevel)!=null) {
+                    JSONObject old = oldObj;
+                    String nextT = getNextToken(currentLevel);
+                    JSONArray oldA = new JSONArray();
+                    boolean make = true;
+                    while(make) {
+                        if (old != null) {
+                            oldA = old.getJSONArray(nextT);
+                        }
+                        for (int j = 0; j < oldA.length(); j++) {
+                            old = oldA.getJSONObject(j);
+                            output.put(old);
+
+                            System.out.println("added " + old.getString("id"));
+                            System.out.println();
+                            nextT = getNextToken(nextT);
+
+                            if (nextT == null) {
+                                //feature level
+                                make=false;
+                            }
+                        }
+                        }
+                    }
             } else {
                 //id already present => merging next level if present
                 String nextToken = getNextToken(currentLevel);
+
                 if (nextToken == null) {
                     //feature level
                     continue;
